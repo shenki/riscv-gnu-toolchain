@@ -44,9 +44,19 @@ AC_ARG_ENABLE(linux,
 	[AS_HELP_STRING([--enable-linux],
 		[set linux as the default make target @<:@--disable-linux@:>@])])
 
-AS_IF([test "x$enable_linux" = xyes],
+AC_ARG_ENABLE(picolibc,
+	[AS_HELP_STRING([--enable-picolibc],
+		[set picolibc as the default make target])],
+	[enable_picolibc=yes],
+	[enable_picolibc=no]
+	)
+
+AS_IF([test "x$enable_linux" != xno],
 	[AC_SUBST(default_target, linux)],
-	[AC_SUBST(default_target, newlib)])
+	[AS_IF([test "x$enable_picolibc" != xno],
+		[AC_SUBST(default_target, picolibc)],
+		[AC_SUBST(default_target, newlib)]
+		)])
 
 AC_ARG_ENABLE(debug_info,
 	[AS_HELP_STRING([--enable-debug-info],
@@ -169,6 +179,11 @@ AS_IF([test "x$enable_multilib" = xyes],
 	[AC_SUBST(musl_multilib_names,"rv32imac-ilp32 rv32gc-ilp32d rv64imac-lp64 rv64gc-lp64d")],
 	[AC_SUBST(musl_multilib_names,"$with_arch-$with_abi")])
 
+# TODO: Does the list need updating for post-2022 targets?
+AS_IF([test "x$enable_multilib" != xno],
+        [AC_SUBST(picolibc_multilib_names,"rv32i-ilp32 rv32iac-ilp32 rv32im-ilp32 rv32imac-ilp32 rv32imafc-ilp32f rv64imac-lp64 rv64imafdc-lp64d")],
+        [AC_SUBST(picolibc_multilib_names,"$with_arch-$with_abi")])
+
 AC_ARG_ENABLE(gcc-checking,
 	[AS_HELP_STRING([--enable-gcc-checking],
 		[Enable gcc internal checking, it will make gcc very slow, only enable it when developing gcc @<:@--disable-gcc-checking@:>@])])
@@ -290,6 +305,7 @@ AC_DEFUN([AX_ARG_WITH_SRC],
 AX_ARG_WITH_SRC(gcc, gcc)
 AX_ARG_WITH_SRC(binutils, binutils)
 AX_ARG_WITH_SRC(newlib, newlib)
+AX_ARG_WITH_SRC(picolibc, picolibc)
 AX_ARG_WITH_SRC(glibc, glibc)
 AX_ARG_WITH_SRC(musl, musl)
 AX_ARG_WITH_SRC(uclibc, uclibc-ng)
@@ -317,6 +333,11 @@ AC_ARG_ENABLE(libsanitizer,
 AS_IF([test "x$enable_libsanitizer" = xyes],
 	[AC_SUBST(enable_libsanitizer, --enable-libsanitizer)],
 	[AC_SUBST(enable_libsanitizer, --disable-libsanitizer)])
+
+AS_IF([test "x$enable_picolibc" != xno],
+	[default_enable_qemu_system=yes],
+	[default_enable_qemu_system=no]
+	)
 
 AC_ARG_ENABLE(qemu_system,
 	[AS_HELP_STRING([--enable-qemu-system],
